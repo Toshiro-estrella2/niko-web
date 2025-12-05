@@ -22,24 +22,29 @@
 <body>
   <script src="flutter_bootstrap.js" async></script>
 
-  <!-- Script para actualizar la PWA cuando haya una nueva versión -->
+  <!-- Script limpio para detectar nuevas versiones SIN registrar otro SW -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('flutter_service_worker.js?v=920995165').then((reg) => {
-        reg.onupdatefound = () => {
+      // Detecta cuando aparece un nuevo service worker
+      navigator.serviceWorker.ready.then(reg => {
+        reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
-          newWorker.onstatechange = () => {
+          newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // Nueva versión disponible
               if (confirm("Hay una nueva versión disponible. ¿Actualizar ahora?")) {
                 newWorker.postMessage({ action: 'skipWaiting' });
-                window.location.reload();
               }
             }
-          };
-        };
+          });
+        });
+      });
+
+      // Recarga automáticamente cuando el nuevo worker toma el control
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
       });
     }
   </script>
+
 </body>
 </html>
